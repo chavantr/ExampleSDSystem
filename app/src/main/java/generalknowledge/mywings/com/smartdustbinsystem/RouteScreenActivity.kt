@@ -3,21 +3,21 @@ package generalknowledge.mywings.com.smartdustbinsystem
 import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
+import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.support.annotation.RequiresApi
-import android.support.design.widget.NavigationView
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.view.MenuItem
+import android.support.v7.app.AppCompatActivity
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationCallback
@@ -29,11 +29,17 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import generalknowledge.mywings.com.smartdustbinsystem.models.Dustbin
+import generalknowledge.mywings.com.smartdustbinsystem.process.GetDustbinAsync
+import generalknowledge.mywings.com.smartdustbinsystem.process.OnDustbinListener
+import generalknowledge.mywings.com.smartdustbinsystem.process.ProgressDialogUtil
 import kotlinx.android.synthetic.main.activity_route_screen.*
+import org.json.JSONArray
 
 class RouteScreenActivity : AppCompatActivity(),
     OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-    GoogleApiClient.OnConnectionFailedListener, LocationListener {
+    GoogleApiClient.OnConnectionFailedListener, LocationListener, OnDustbinListener {
+
 
     private var mMap: GoogleMap? = null
     private val SHOW_ICON_IN_MAP = 49
@@ -44,12 +50,13 @@ class RouteScreenActivity : AppCompatActivity(),
     private lateinit var cPosition: Marker
     private lateinit var marker: Marker
     private lateinit var circle: Circle
-    private lateinit var progressDialog: ProgressDialog
+    private var vId: Int = 0
+    private lateinit var progressDialogUtil: ProgressDialogUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_route_screen)
-
+        progressDialogUtil = ProgressDialogUtil(this)
         var frame = activity_place_map as SupportMapFragment
         frame.getMapAsync(this)
 
@@ -102,6 +109,9 @@ class RouteScreenActivity : AppCompatActivity(),
         val cameraPos = CameraPosition.Builder().tilt(60f).target(latLng).zoom(20f).build()
         mMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPos), 1000, null)
 
+        val intent = Intent(this@RouteScreenActivity, SelectVehicleActivity::class.java)
+        startActivityForResult(intent, 1001)
+
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -139,7 +149,7 @@ class RouteScreenActivity : AppCompatActivity(),
     }
 
     @SuppressLint("MissingPermission")
-    override fun onConnected(p0: Bundle?) {
+    override fun onConnected(bundle: Bundle?) {
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(
             mLocationRequest, locationCallback,
             Looper.myLooper()
@@ -178,5 +188,47 @@ class RouteScreenActivity : AppCompatActivity(),
 
     }
 
+    private fun initGetDustbin() {
+        progressDialogUtil.show()
+        val getDustbinAsync = GetDustbinAsync()
+        getDustbinAsync.setOnDustbinListener(this, vId)
+    }
+
+    override fun onDustbinSuccess(result: JSONArray) {
+        progressDialogUtil.hide()
+        if (null != result) {
+            var lst = ArrayList<Dustbin>()
+            for (i in 0..(result.length() - 1)) {
+                var node = Dustbin()
+                val jNode = result.getJSONObject(i)
+                node.id = jNode.getInt("Id")
+                node.name = jNode.getString("Name")
+                node.local = jNode.getString("LocalArea")
+                node.latitude = jNode.getString("Latitude")
+                node.longitude = jNode.getString("Longitude")
+                node.weight = jNode.getString("Weight")
+                node.moisture = jNode.getString("Moisture")
+                node.vid = jNode.getInt("VId")
+                lst.add(node)
+                val nLatLng = LatLng(node.latitude.toDouble(), node.longitude.toDouble())
+                var marker = MarkerOptions().position(nLatLng)
+                mMap!!.addMarker(marker).title = "${node.name}"
+
+            }
+
+
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 1001) {
+                vId = data!!.getIntExtra("id", 0)
+                initGetDustbin()
+            }
+
+        }
+    }
 
 }
