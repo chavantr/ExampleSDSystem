@@ -13,17 +13,18 @@ class LoginAsync : AsyncTask<JSONObject, Void, JSONObject>() {
 
         val response = httpConnectionUtil.requestPost(ConstantUtils.URL + ConstantUtils.LOGIN, params[0])
 
-        return JSONObject(response)
+        return if (response.isNullOrBlank()) null else JSONObject(response)
     }
 
     override fun onPostExecute(result: JSONObject?) {
         super.onPostExecute(result)
 
-        onLoginListener.onLoginSuccess(result!!)
+        onLoginListener.onLoginSuccess(result)
     }
 
     fun setOnLoginListener(onLoginListener: OnLoginListener, request: JSONObject) {
         this.onLoginListener = onLoginListener
+        super.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, request)
 
     }
 }

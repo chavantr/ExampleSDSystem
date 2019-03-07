@@ -7,6 +7,22 @@
               android:layout_height="match_parent">
 
 
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/lblName"
+              android:textColor="@color/colorAccent" android:textStyle="bold" android:padding="7dp"
+              android:text="@string/name"/>
+
+    <TextView android:textColor="@color/colorAccent" android:textStyle="bold" android:layout_width="match_parent"
+              android:layout_height="wrap_content" android:id="@+id/lblWeight" android:padding="7dp"
+              android:text="@string/weight"/>
+
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+              android:textColor="@color/colorAccent" android:textStyle="bold" android:id="@+id/lblMoisture"
+              android:text="@string/moisture"
+              android:padding="7dp"/>
+
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/lblExtra"
+              android:textColor="@color/colorAccent" android:textStyle="bold" android:padding="15dp"
+              android:visibility="gone"/>
 
 
 </LinearLayout>

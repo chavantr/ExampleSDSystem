@@ -5,7 +5,8 @@
     <color name="colorAccent">#D81B60</color>
 
 
-
     <color name="map_circle_shade">#44FF0000</color>
     <color name="map_circle_stroke">#FFFF0000</color>
+
+    <color name="black_overlay">#66000000</color>
 </resources>

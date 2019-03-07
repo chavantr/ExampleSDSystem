@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity(), OnLoginListener {
             startActivity(intent)
 
         } else {
-            Toast.makeText(this@MainActivity, "Something went wrong", Toast.LENGTH_LONG).show()
+            Toast.makeText(this@MainActivity, "Enter correct username or password", Toast.LENGTH_LONG).show()
         }
 
     }

@@ -22,7 +22,7 @@ class JointAdapter(var list: List<Vehicle>) : RecyclerView.Adapter<JointAdapter.
 
     override fun onBindViewHolder(viewHolder: JointViewHolder, postion: Int) {
 
-        viewHolder.lblName.text = lstVehicle[postion].name
+        viewHolder.lblName.text = lstVehicle[postion].name + "\n" + lstVehicle[postion].number
 
         viewHolder.lblName.setOnClickListener {
             onVehicleSelectedListener.onVehicleSelected(lstVehicle[postion])

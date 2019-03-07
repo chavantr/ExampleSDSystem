@@ -34,12 +34,15 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.mywings.messmanagementsystem.routes.Constants
 import generalknowledge.mywings.com.smartdustbinsystem.models.Dustbin
+import generalknowledge.mywings.com.smartdustbinsystem.models.UserInfoHolder
 import generalknowledge.mywings.com.smartdustbinsystem.process.GetDustbinAsync
 import generalknowledge.mywings.com.smartdustbinsystem.process.OnDustbinListener
 import generalknowledge.mywings.com.smartdustbinsystem.process.ProgressDialogUtil
 import generalknowledge.mywings.com.smartdustbinsystem.routes.DirectionsJSONParser
 import generalknowledge.mywings.com.smartdustbinsystem.routes.JsonUtil
 import kotlinx.android.synthetic.main.activity_route_screen.*
+import kotlinx.android.synthetic.main.layout_dustbin_row.*
+import kotlinx.android.synthetic.main.layout_dustbin_row.view.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
@@ -131,6 +134,8 @@ class RouteScreenActivity : AppCompatActivity(),
         val cameraPos = CameraPosition.Builder().tilt(60f).target(latLng).zoom(20f).build()
         mMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPos), 1000, null)
 
+        mMap!!.setInfoWindowAdapter(infoWindowAdapter)
+
         val intent = Intent(this@RouteScreenActivity, SelectVehicleActivity::class.java)
         startActivityForResult(intent, 1001)
 
@@ -161,6 +166,8 @@ class RouteScreenActivity : AppCompatActivity(),
 
             if (null != marker) marker.remove()
             if (null != circle) circle.remove()
+
+            val speed = locationResult.locations[0].speed
 
             latLng = LatLng(locationResult.locations[0].latitude, locationResult.locations[0].longitude)
             val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)
@@ -194,7 +201,9 @@ class RouteScreenActivity : AppCompatActivity(),
 
     }
 
-    override fun onLocationChanged(p0: Location?) {
+    override fun onLocationChanged(location: Location?) {
+
+        val speed = location!!.speed
 
     }
 
@@ -233,11 +242,11 @@ class RouteScreenActivity : AppCompatActivity(),
                 node.vid = jNode.getInt("VId")
                 lst.add(node)
                 val nLatLng = LatLng(node.latitude.toDouble(), node.longitude.toDouble())
-                var marker = MarkerOptions().position(nLatLng)
+                var marker = MarkerOptions().position(nLatLng).snippet(i.toString())
                 mMap!!.addMarker(marker).title = "${node.name}"
-
             }
 
+            UserInfoHolder.getInstance().dustbin = lst
 
         }
     }
@@ -256,16 +265,28 @@ class RouteScreenActivity : AppCompatActivity(),
     private val infoWindowAdapter = object : GoogleMap.InfoWindowAdapter {
         override fun getInfoContents(marker: Marker?): View? {
             var view: View? = null
-            var values: List<String>
 
             try {
                 if (marker!!.tag != 1) {
-                    //view = layoutInflater.inflate(R.layout.layout_mess_row, null)
-                    //values = marker!!.snippet.toString().split("#")
+                    view = layoutInflater.inflate(R.layout.layout_dustbin_row, null)
 
+                    val i = marker.snippet.toInt()
+
+                    view!!.lblName.text = "Name : " + UserInfoHolder.getInstance().dustbin[i].name
+
+                    view!!.lblWeight.text = "Weight : " + UserInfoHolder.getInstance().dustbin[i].weight
+
+                    view!!.lblMoisture.text =
+                        "Moisture : " + if (UserInfoHolder.getInstance().dustbin[i].moisture.equals(
+                                "true",
+                                true
+                            )
+                        ) "Yes" else "No"
                 }
             } catch (e: Exception) {
-
+                view!!.lblName.text = "Vehicle location"
+                view!!.lblWeight.visibility = View.GONE
+                view!!.lblMoisture.visibility = View.GONE
             }
 
             return view;
