@@ -41,7 +41,6 @@ import generalknowledge.mywings.com.smartdustbinsystem.process.ProgressDialogUti
 import generalknowledge.mywings.com.smartdustbinsystem.routes.DirectionsJSONParser
 import generalknowledge.mywings.com.smartdustbinsystem.routes.JsonUtil
 import kotlinx.android.synthetic.main.activity_route_screen.*
-import kotlinx.android.synthetic.main.layout_dustbin_row.*
 import kotlinx.android.synthetic.main.layout_dustbin_row.view.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -76,6 +75,7 @@ class RouteScreenActivity : AppCompatActivity(),
     private var destlng: Double = 0.0
     private var srctlat: Double = 0.0
     private var srclng: Double = 0.0
+    private lateinit var points: ArrayList<Dustbin>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -163,12 +163,9 @@ class RouteScreenActivity : AppCompatActivity(),
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             locationResult ?: return
-
             if (null != marker) marker.remove()
             if (null != circle) circle.remove()
-
             val speed = locationResult.locations[0].speed
-
             latLng = LatLng(locationResult.locations[0].latitude, locationResult.locations[0].longitude)
             val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)
             marker = mMap!!.addMarker(MarkerOptions().position(latLng).icon(icon))
@@ -229,6 +226,7 @@ class RouteScreenActivity : AppCompatActivity(),
         progressDialogUtil.hide()
         if (null != result) {
             var lst = ArrayList<Dustbin>()
+            points = ArrayList<Dustbin>()
             for (i in 0..(result.length() - 1)) {
                 var node = Dustbin()
                 val jNode = result.getJSONObject(i)
@@ -241,6 +239,11 @@ class RouteScreenActivity : AppCompatActivity(),
                 node.moisture = jNode.getString("Moisture")
                 node.vid = jNode.getInt("VId")
                 lst.add(node)
+
+                if (`50withMoisture`(node) || `40withMoisture`(node)) {
+                    points.add(node)
+                }
+
                 val nLatLng = LatLng(node.latitude.toDouble(), node.longitude.toDouble())
                 var marker = MarkerOptions().position(nLatLng).snippet(i.toString())
                 mMap!!.addMarker(marker).title = "${node.name}"
@@ -248,8 +251,31 @@ class RouteScreenActivity : AppCompatActivity(),
 
             UserInfoHolder.getInstance().dustbin = lst
 
+
+            if (points.isNotEmpty()) {
+                for (i in points.indices) {
+                    if (i == 0) {
+                        val str = getDirectionsUrl(
+                            latLng,
+                            LatLng(points[0].latitude.toDouble(), points[0].longitude.toDouble())
+                        )
+                        val downloadTask = DownloadTask()
+                        downloadTask.execute(str)
+                    } else {
+
+                    }
+                }
+            }
+
+
         }
     }
+
+    private fun `50withMoisture`(node: Dustbin) =
+        node.weight.toInt() > 50 && node.moisture.equals("false", true)
+
+    private fun `40withMoisture`(node: Dustbin) =
+        node.weight.toInt() > 40 && node.moisture.equals("true", true)
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -361,16 +387,10 @@ class RouteScreenActivity : AppCompatActivity(),
             // Connecting to url
             urlConnection.connect()
 
-            // Reading data from url
             iStream = urlConnection.inputStream
 
-            /* val br = BufferedReader(
-                 InputStreamReader(
-                     iStream!!
-                 )
-             )*/
             data = jsonUtil.convertStreamToString(iStream)
-            // br.close()
+
         } catch (e: Exception) {
 
         } finally {
@@ -435,7 +455,9 @@ class RouteScreenActivity : AppCompatActivity(),
                 lineOptions.width(9f)
                 lineOptions.color(Color.RED)
             }
+
             // Drawing polyline in the Google Map for the i-th route
+
             map!!.clear()
 
             if (null != lineOptions) {
