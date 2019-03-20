@@ -8,6 +8,7 @@ data class Dustbin(
     var longitude: String = "",
     var weight: String = "",
     var moisture: String = "",
-    var vid: Int = 0
+    var vid: Int = 0,
+    var distance: Int = 0
 
 )

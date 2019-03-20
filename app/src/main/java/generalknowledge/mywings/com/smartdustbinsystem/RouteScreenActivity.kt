@@ -48,7 +48,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.HashMap
+import java.util.*
 import kotlin.collections.ArrayList
 
 class RouteScreenActivity : AppCompatActivity(),
@@ -60,7 +60,7 @@ class RouteScreenActivity : AppCompatActivity(),
     private val SHOW_ICON_IN_MAP = 49
     private var mGoogleApiClient: GoogleApiClient? = null
     private var mLocationRequest: LocationRequest? = null
-    private var latLng: LatLng = LatLng(18.515665, 73.924090)
+    private var latLng: LatLng = LatLng(18.538811, 73.831981)
     private var locationManager: LocationManager? = null
 
     private lateinit var marker: Marker
@@ -77,6 +77,8 @@ class RouteScreenActivity : AppCompatActivity(),
     private var srclng: Double = 0.0
     private lateinit var points: ArrayList<Dustbin>
 
+    private lateinit var latLngPoints: ArrayList<LatLng>
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +86,11 @@ class RouteScreenActivity : AppCompatActivity(),
         progressDialogUtil = ProgressDialogUtil(this)
         var frame = activity_place_map as SupportMapFragment
         frame.getMapAsync(this)
+
+        jsonUtil = JsonUtil()
+
+        nsource = ""
+        ndest = ""
 
 
     }
@@ -226,6 +233,7 @@ class RouteScreenActivity : AppCompatActivity(),
         progressDialogUtil.hide()
         if (null != result) {
             var lst = ArrayList<Dustbin>()
+            latLngPoints = ArrayList<LatLng>()
             points = ArrayList<Dustbin>()
             for (i in 0..(result.length() - 1)) {
                 var node = Dustbin()
@@ -238,34 +246,95 @@ class RouteScreenActivity : AppCompatActivity(),
                 node.weight = jNode.getString("Weight")
                 node.moisture = jNode.getString("Moisture")
                 node.vid = jNode.getInt("VId")
+
+                val location = Location("Current location")
+                location.longitude = latLng.longitude
+                location.latitude = latLng.latitude
+                val locationN = Location("Location")
+                locationN.latitude = node.latitude.toDouble()
+                locationN.longitude = node.longitude.toDouble()
+                node.distance = location.distanceTo(locationN).toInt()
                 lst.add(node)
 
-                if (`50withMoisture`(node) || `40withMoisture`(node)) {
-                    points.add(node)
-                }
+                /* latLngPoints.add(latLng)
 
+                 if (`50withMoisture`(node) || `40withMoisture`(node)) {
+                     points.add(node)
+                     latLngPoints.add(LatLng(node.latitude.toDouble(), node.longitude.toDouble()))
+                 }*/
                 val nLatLng = LatLng(node.latitude.toDouble(), node.longitude.toDouble())
                 var marker = MarkerOptions().position(nLatLng).snippet(i.toString())
                 mMap!!.addMarker(marker).title = "${node.name}"
             }
 
+
+
+            Collections.sort(lst, SortDistanceWithGenetic())
+
+
             UserInfoHolder.getInstance().dustbin = lst
 
 
-            if (points.isNotEmpty()) {
-                for (i in points.indices) {
-                    if (i == 0) {
+            latLngPoints.clear()
+
+            latLngPoints.add(latLng)
+
+
+            for (i in lst.indices) {
+                if (`50withMoisture`(lst[i]) || `40withMoisture`(lst[i])) {
+                    points.add(lst[i])
+                    latLngPoints.add(LatLng(lst[i].latitude.toDouble(), lst[i].longitude.toDouble()))
+                }
+            }
+
+            if (latLngPoints.isNotEmpty()) {
+
+                for (i in latLngPoints.indices) {
+
+                    if (i < latLngPoints.size - 1) {
+
                         val str = getDirectionsUrl(
-                            latLng,
-                            LatLng(points[0].latitude.toDouble(), points[0].longitude.toDouble())
+                            latLngPoints[i],
+                            latLngPoints[i + 1]
                         )
+
                         val downloadTask = DownloadTask()
                         downloadTask.execute(str)
-                    } else {
-
                     }
                 }
             }
+
+
+            /* if (points.isNotEmpty()) {
+                 for (i in points.indices) {
+                     if (i == 0) {
+                         val str = getDirectionsUrl(
+                             latLng,
+                             LatLng(points[0].latitude.toDouble(), points[0].longitude.toDouble())
+                         )
+                         val downloadTask = DownloadTask()
+                         downloadTask.execute(str)
+                     } else {
+                         if (i < points.size - 1) {
+                             val str = getDirectionsUrl(
+                                 LatLng(points[i].latitude.toDouble(), points[i].longitude.toDouble()),
+                                 LatLng(points[i + 1].latitude.toDouble(), points[i + 1].longitude.toDouble())
+                             )
+                             val downloadTask = DownloadTask()
+                             downloadTask.execute(str)
+                         }
+
+                         if (i == points.size) {
+                             val str = getDirectionsUrl(
+                                 LatLng(points[i - 1].latitude.toDouble(), points[i - 1].longitude.toDouble()),
+                                 LatLng(points[i].latitude.toDouble(), points[i].longitude.toDouble())
+                             )
+                             val downloadTask = DownloadTask()
+                             downloadTask.execute(str)
+                         }
+                     }
+                 }
+             }*/
 
 
         }
@@ -285,6 +354,12 @@ class RouteScreenActivity : AppCompatActivity(),
                 initGetDustbin()
             }
 
+        }
+    }
+
+    inner class SortDistanceWithGenetic : Comparator<Dustbin> {
+        override fun compare(left: Dustbin?, right: Dustbin?): Int {
+            return left!!.distance - right!!.distance
         }
     }
 
@@ -458,7 +533,7 @@ class RouteScreenActivity : AppCompatActivity(),
 
             // Drawing polyline in the Google Map for the i-th route
 
-            map!!.clear()
+            //map!!.clear()
 
             if (null != lineOptions) {
                 map!!.addPolyline(lineOptions)
