@@ -21,17 +21,17 @@
                 android:theme="@style/FullscreenTheme">
         </activity>
         <activity
-                android:name=".SelectVehicleActivity"
+                android:name=".SelectVehicleActivity" android:screenOrientation="portrait"
                 android:label="@string/select_vehicle">
         </activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".RouteScreenActivity">
+        <activity android:name=".RouteScreenActivity" android:screenOrientation="portrait">
         </activity>
 
         <meta-data

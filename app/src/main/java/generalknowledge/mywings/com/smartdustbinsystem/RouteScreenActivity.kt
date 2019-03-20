@@ -79,6 +79,8 @@ class RouteScreenActivity : AppCompatActivity(),
 
     private lateinit var latLngPoints: ArrayList<LatLng>
 
+    private lateinit var timer: Timer
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,18 +94,24 @@ class RouteScreenActivity : AppCompatActivity(),
         nsource = ""
         ndest = ""
 
+        timer = Timer()
+
 
     }
 
     private fun setupMap() {
+
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         val enabled = locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
-        if (enabled) {
-            var location = LocationUtil.getBestLastKnownLocation(this)
-
-            latLng = LatLng(location.latitude, location.longitude)
+        try {
+            if (enabled) {
+                var location = LocationUtil.getBestLastKnownLocation(this)
+                latLng = LatLng(location.latitude, location.longitude)
+            }
+        } catch (e: Exception) {
+            Log.e("test", e.printStackTrace().toString())
         }
 
         mMap!!.uiSettings.isMyLocationButtonEnabled = false
@@ -156,12 +164,15 @@ class RouteScreenActivity : AppCompatActivity(),
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             setupMap()
         } else {
             requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
                 SHOW_ICON_IN_MAP
             )
         }
@@ -255,25 +266,14 @@ class RouteScreenActivity : AppCompatActivity(),
                 locationN.longitude = node.longitude.toDouble()
                 node.distance = location.distanceTo(locationN).toInt()
                 lst.add(node)
-
-                /* latLngPoints.add(latLng)
-
-                 if (`50withMoisture`(node) || `40withMoisture`(node)) {
-                     points.add(node)
-                     latLngPoints.add(LatLng(node.latitude.toDouble(), node.longitude.toDouble()))
-                 }*/
                 val nLatLng = LatLng(node.latitude.toDouble(), node.longitude.toDouble())
                 var marker = MarkerOptions().position(nLatLng).snippet(i.toString())
                 mMap!!.addMarker(marker).title = "${node.name}"
             }
 
-
-
             Collections.sort(lst, SortDistanceWithGenetic())
 
-
             UserInfoHolder.getInstance().dustbin = lst
-
 
             latLngPoints.clear()
 
@@ -298,45 +298,12 @@ class RouteScreenActivity : AppCompatActivity(),
                             latLngPoints[i + 1]
                         )
 
-                        val downloadTask = DownloadTask()
+                        val downloadTask = InitializePopulationOfGenetic()
                         downloadTask.execute(str)
                     }
                 }
+                timer.schedule(checkDistanceWithUpdate, 10000 * 60, 10000 * 60)
             }
-
-
-            /* if (points.isNotEmpty()) {
-                 for (i in points.indices) {
-                     if (i == 0) {
-                         val str = getDirectionsUrl(
-                             latLng,
-                             LatLng(points[0].latitude.toDouble(), points[0].longitude.toDouble())
-                         )
-                         val downloadTask = DownloadTask()
-                         downloadTask.execute(str)
-                     } else {
-                         if (i < points.size - 1) {
-                             val str = getDirectionsUrl(
-                                 LatLng(points[i].latitude.toDouble(), points[i].longitude.toDouble()),
-                                 LatLng(points[i + 1].latitude.toDouble(), points[i + 1].longitude.toDouble())
-                             )
-                             val downloadTask = DownloadTask()
-                             downloadTask.execute(str)
-                         }
-
-                         if (i == points.size) {
-                             val str = getDirectionsUrl(
-                                 LatLng(points[i - 1].latitude.toDouble(), points[i - 1].longitude.toDouble()),
-                                 LatLng(points[i].latitude.toDouble(), points[i].longitude.toDouble())
-                             )
-                             val downloadTask = DownloadTask()
-                             downloadTask.execute(str)
-                         }
-                     }
-                 }
-             }*/
-
-
         }
     }
 
@@ -346,14 +313,12 @@ class RouteScreenActivity : AppCompatActivity(),
     private fun `40withMoisture`(node: Dustbin) =
         node.weight.toInt() > 40 && node.moisture.equals("true", true)
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == RESULT_OK) {
             if (requestCode == 1001) {
                 vId = data!!.getIntExtra("id", 0)
                 initGetDustbin()
             }
-
         }
     }
 
@@ -366,17 +331,12 @@ class RouteScreenActivity : AppCompatActivity(),
     private val infoWindowAdapter = object : GoogleMap.InfoWindowAdapter {
         override fun getInfoContents(marker: Marker?): View? {
             var view: View? = null
-
             try {
                 if (marker!!.tag != 1) {
                     view = layoutInflater.inflate(R.layout.layout_dustbin_row, null)
-
                     val i = marker.snippet.toInt()
-
                     view!!.lblName.text = "Name : " + UserInfoHolder.getInstance().dustbin[i].name
-
                     view!!.lblWeight.text = "Weight : " + UserInfoHolder.getInstance().dustbin[i].weight
-
                     view!!.lblMoisture.text =
                         "Moisture : " + if (UserInfoHolder.getInstance().dustbin[i].moisture.equals(
                                 "true",
@@ -389,7 +349,6 @@ class RouteScreenActivity : AppCompatActivity(),
                 view!!.lblWeight.visibility = View.GONE
                 view!!.lblMoisture.visibility = View.GONE
             }
-
             return view;
         }
 
@@ -399,7 +358,7 @@ class RouteScreenActivity : AppCompatActivity(),
 
     }
 
-// IMP
+    // IMP
 
     private var key = "&key=AIzaSyClCN7T0VPX7MIoOJEMA3W9JLXhV_S7yx4"
 
@@ -415,7 +374,7 @@ class RouteScreenActivity : AppCompatActivity(),
                 + output + "?" + parameters)
     }
 
-    private inner class DownloadTask : AsyncTask<String, Void, String>() {
+    private inner class InitializePopulationOfGenetic : AsyncTask<String, Void, String>() {
 
         // Downloading data in non-ui thread
         override fun doInBackground(vararg url: String): String {
@@ -439,7 +398,7 @@ class RouteScreenActivity : AppCompatActivity(),
         override fun onPostExecute(result: String) {
             super.onPostExecute(result)
 
-            val parserTask = ParserTask(mMap!!)
+            val parserTask = GeneticParserTask(mMap!!)
 
             // Invokes the thread for parsing the JSON data
             parserTask.execute(result)
@@ -476,7 +435,7 @@ class RouteScreenActivity : AppCompatActivity(),
     }
 
     /** A class to parse the Google Places in JSON format  */
-    private inner class ParserTask(internal var map: GoogleMap?) :
+    private inner class GeneticParserTask(internal var map: GoogleMap?) :
         AsyncTask<String, Int, List<List<HashMap<String, String>>>>() {
 
         // Parsing the data in non-ui thread
@@ -593,5 +552,20 @@ class RouteScreenActivity : AppCompatActivity(),
         }
         mMap!!.moveCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 90))
     }
+
+
+    private val checkDistanceWithUpdate = object : TimerTask() {
+        override fun run() {
+
+            initGetDustbin()
+        }
+
+    }
+
+    /*private val checkDistanceWithUpdate = TimerTask {
+
+        initGetDustbin()
+
+    }*/
 
 }
