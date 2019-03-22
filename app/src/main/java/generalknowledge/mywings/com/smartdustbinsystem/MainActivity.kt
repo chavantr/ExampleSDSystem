@@ -1,8 +1,8 @@
 package generalknowledge.mywings.com.smartdustbinsystem
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import generalknowledge.mywings.com.smartdustbinsystem.models.User
 import generalknowledge.mywings.com.smartdustbinsystem.models.UserInfoHolder
@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity(), OnLoginListener {
                 Toast.makeText(this@MainActivity, "Please enter username and password", Toast.LENGTH_LONG).show()
             }
         }
+
+
     }
 
 
@@ -53,7 +55,7 @@ class MainActivity : AppCompatActivity(), OnLoginListener {
 
             UserInfoHolder.getInstance().user = user
 
-            val intent = Intent(this@MainActivity, RouteScreenActivity::class.java)
+            val intent = Intent(this@MainActivity, RouteScreenActivityWithNavigation::class.java)
             startActivity(intent)
 
         } else {

@@ -32,9 +32,7 @@ class JointAdapter(var list: List<Vehicle>) : RecyclerView.Adapter<JointAdapter.
 
 
     inner class JointViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         val lblName = itemView.lblName
-
     }
 
     fun setOnVehicleSelectedListener(onVehicleSelectedListener: OnVehicleSelectedListener) {

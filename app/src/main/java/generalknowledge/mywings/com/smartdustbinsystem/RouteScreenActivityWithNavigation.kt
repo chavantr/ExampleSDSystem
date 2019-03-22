@@ -15,10 +15,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.support.annotation.RequiresApi
+import android.support.design.widget.NavigationView
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v4.view.GravityCompat
+import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import com.google.android.gms.common.ConnectionResult
@@ -40,8 +45,11 @@ import generalknowledge.mywings.com.smartdustbinsystem.process.OnDustbinListener
 import generalknowledge.mywings.com.smartdustbinsystem.process.ProgressDialogUtil
 import generalknowledge.mywings.com.smartdustbinsystem.routes.DirectionsJSONParser
 import generalknowledge.mywings.com.smartdustbinsystem.routes.JsonUtil
-import kotlinx.android.synthetic.main.activity_route_screen.*
+import kotlinx.android.synthetic.main.activity_route_screen_with_navigation.*
+import kotlinx.android.synthetic.main.app_bar_route_screen_activity_with_navigation.*
+import kotlinx.android.synthetic.main.content_route_screen_activity_with_navigation.*
 import kotlinx.android.synthetic.main.layout_dustbin_row.view.*
+import kotlinx.android.synthetic.main.nav_header_route_screen_activity_with_navigation.view.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
@@ -49,12 +57,10 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
-import kotlin.collections.ArrayList
 
-class RouteScreenActivity : AppCompatActivity(),
+class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener,
     OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, LocationListener, OnDustbinListener {
-
 
     private var mMap: GoogleMap? = null
     private val SHOW_ICON_IN_MAP = 49
@@ -79,12 +85,22 @@ class RouteScreenActivity : AppCompatActivity(),
 
     private lateinit var latLngPoints: ArrayList<LatLng>
 
-    private lateinit var timer: Timer
+    //private lateinit var timer: Timer
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_route_screen)
+        setContentView(R.layout.activity_route_screen_with_navigation)
+        setSupportActionBar(toolbar)
+
+        val toggle = ActionBarDrawerToggle(
+            this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+
+        drawer_layout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        nav_view.setNavigationItemSelectedListener(this)
 
         progressDialogUtil = ProgressDialogUtil(this)
 
@@ -97,10 +113,63 @@ class RouteScreenActivity : AppCompatActivity(),
         nsource = ""
         ndest = ""
 
-        timer = Timer()
+        //timer = Timer()
 
+        var view = nav_view.getHeaderView(0)
+
+        view.lblHeaderName.text = UserInfoHolder.getInstance().user.name
+
+        view.lblUser.text = UserInfoHolder.getInstance().user.username
 
     }
+
+    override fun onBackPressed() {
+        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
+            drawer_layout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.route_screen_activity_with_navigation, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                initGetDustbin()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+
+        when (item.itemId) {
+            R.id.nav_help -> {
+                val intent = Intent(this@RouteScreenActivityWithNavigation, HelpActivity::class.java)
+                startActivity(intent)
+                drawer_layout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_logout -> {
+                drawer_layout.closeDrawer(GravityCompat.START)
+                val intent = Intent(this@RouteScreenActivityWithNavigation, MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                startActivity(intent)
+                return true
+            }
+        }
+        drawer_layout.closeDrawer(GravityCompat.START)
+        return true
+    }
+
 
     private fun setupMap() {
 
@@ -126,8 +195,6 @@ class RouteScreenActivity : AppCompatActivity(),
             .addApi(LocationServices.API)
             .build()
 
-
-
         mLocationRequest = LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setInterval((10 * 1000).toLong())
@@ -147,14 +214,13 @@ class RouteScreenActivity : AppCompatActivity(),
         )
 
         val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)
-
         marker = mMap!!.addMarker(MarkerOptions().position(latLng).icon(icon))
         val cameraPos = CameraPosition.Builder().tilt(60f).target(latLng).zoom(20f).build()
         mMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPos), 1000, null)
 
         mMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
-        val intent = Intent(this@RouteScreenActivity, SelectVehicleActivity::class.java)
+        val intent = Intent(this@RouteScreenActivityWithNavigation, SelectVehicleActivity::class.java)
         startActivityForResult(intent, 1001)
 
     }
@@ -220,9 +286,7 @@ class RouteScreenActivity : AppCompatActivity(),
     }
 
     override fun onLocationChanged(location: Location?) {
-
         val speed = location!!.speed
-
     }
 
     override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
@@ -270,47 +334,51 @@ class RouteScreenActivity : AppCompatActivity(),
                 node.distance = location.distanceTo(locationN).toInt()
                 lst.add(node)
 
-                val nLatLng = LatLng(node.latitude.toDouble(), node.longitude.toDouble())
-                var marker = MarkerOptions().position(nLatLng).snippet(i.toString())
-                mMap!!.addMarker(marker).title = "${node.name}"
 
             }
 
             Collections.sort(lst, SortDistanceWithGenetic())
-
             UserInfoHolder.getInstance().dustbin = lst
 
+
+            for (i in lst.indices) {
+                val nLatLng = LatLng(lst[i].latitude.toDouble(), lst[i].longitude.toDouble())
+                val icon =
+                    if (checkIcon(lst[i])) BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED) else BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_GREEN
+                    )
+                var marker = MarkerOptions().position(nLatLng).snippet(i.toString())
+                var n = mMap!!.addMarker(marker)
+                n.setIcon(icon)
+                n.title = "${lst[i].name}"
+            }
+
             latLngPoints.clear()
-
             latLngPoints.add(latLng)
-
-
             for (i in lst.indices) {
                 if (`50withMoisture`(lst[i]) || `40withMoisture`(lst[i])) {
                     points.add(lst[i])
                     latLngPoints.add(LatLng(lst[i].latitude.toDouble(), lst[i].longitude.toDouble()))
                 }
             }
-
             if (latLngPoints.isNotEmpty()) {
-
                 for (i in latLngPoints.indices) {
-
                     if (i < latLngPoints.size - 1) {
-
                         val str = getDirectionsUrl(
                             latLngPoints[i],
                             latLngPoints[i + 1]
                         )
-
                         val downloadTask = InitializePopulationOfGenetic()
                         downloadTask.execute(str)
                     }
                 }
-                timer.schedule(checkDistanceWithUpdate, 10000 * 60, 10000 * 60)
+                //timer.schedule(checkDistanceWithUpdate, 10000 * 60, 10000 * 60)
             }
         }
     }
+
+    private fun checkIcon(lst: Dustbin): Boolean =
+        `50withMoisture`(lst) || `40withMoisture`(lst)
 
     private fun `50withMoisture`(node: Dustbin) =
         node.weight.toInt() > 50 && node.moisture.equals("false", true)
@@ -511,7 +579,7 @@ class RouteScreenActivity : AppCompatActivity(),
 
             } else {
                 Toast.makeText(
-                    this@RouteScreenActivity,
+                    this@RouteScreenActivityWithNavigation,
                     "Enable to draw routes, Please try again",
                     Toast.LENGTH_LONG
                 ).show()
@@ -561,16 +629,8 @@ class RouteScreenActivity : AppCompatActivity(),
 
     private val checkDistanceWithUpdate = object : TimerTask() {
         override fun run() {
-
             initGetDustbin()
         }
 
     }
-
-    /*private val checkDistanceWithUpdate = TimerTask {
-
-        initGetDustbin()
-
-    }*/
-
 }

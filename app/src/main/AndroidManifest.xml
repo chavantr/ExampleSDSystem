@@ -14,24 +14,38 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
+        <activity android:name=".HelpActivity" android:screenOrientation="portrait" android:label="Help">
+        </activity>
+        <activity
+                android:name=".RouteScreenActivityWithNavigation"
+                android:label="@string/title_activity_route_screen_with_navigation"
+                android:screenOrientation="portrait"
+                android:theme="@style/AppTheme.NoActionBar">
+        </activity>
         <activity
                 android:name=".SplashActivity"
                 android:configChanges="orientation|keyboardHidden|screenSize"
-                android:label="@string/title_activity_spalash" android:screenOrientation="portrait"
+                android:label="@string/title_activity_spalash"
+                android:screenOrientation="portrait"
                 android:theme="@style/FullscreenTheme">
         </activity>
         <activity
-                android:name=".SelectVehicleActivity" android:screenOrientation="portrait"
-                android:label="@string/select_vehicle">
+                android:name=".SelectVehicleActivity"
+                android:label="@string/select_vehicle"
+                android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".MainActivity" android:screenOrientation="portrait">
+        <activity
+                android:name=".MainActivity"
+                android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".RouteScreenActivity" android:screenOrientation="portrait">
+        <activity
+                android:name=".RouteScreenActivity"
+                android:screenOrientation="portrait">
         </activity>
 
         <meta-data
