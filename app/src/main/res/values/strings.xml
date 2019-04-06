@@ -11,11 +11,13 @@
     <string name="name">Name :</string>
     <string name="weight">Weight :</string>
     <string name="moisture">Moisture :</string>
-    <string name="title_activity_route_screen_with_navigation">RouteScreenActivityWithNavigation</string>
+    <string name="title_activity_route_screen_with_navigation">Dashboard</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Refresh</string>
+    <string name="clean_city">Clean City</string>
+    <string name="smart_city">Smart City</string>
 </resources>

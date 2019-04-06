@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:background="#0099cc"
-             tools:context=".SplashActivity">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/login_bg"
+                tools:context=".SplashActivity">
 
 
+    <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content"
+               android:contentDescription="@string/app_name" android:scaleType="fitXY"
+               android:id="@+id/imgLogo"
+               android:src="@drawable/image_logo" android:layout_centerInParent="true"/>
 
 
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+              android:text="@string/smart_city" android:textColor="@color/map_circle_stroke"
+              android:id="@+id/lblSmartCity"
+              android:layout_marginBottom="50dp"
+              android:gravity="center_vertical" android:textStyle="bold" android:padding="15dp" android:textSize="35sp"
+              android:layout_above="@id/imgLogo"/>
+
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:textStyle="bold"
+              android:gravity="end|center_vertical" android:padding="15dp" android:textSize="35sp"
+              android:id="@+id/lblCleanCity"
+              android:layout_marginTop="50dp"
+              android:text="@string/clean_city" android:textColor="@color/map_circle_stroke"
+              android:layout_below="@id/imgLogo"/>
 
 
-
-</FrameLayout>
+</RelativeLayout>

@@ -127,7 +127,8 @@ class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.On
         if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
             drawer_layout.closeDrawer(GravityCompat.START)
         } else {
-            super.onBackPressed()
+            //super.onBackPressed()
+            startLocation()
         }
     }
 
@@ -151,6 +152,14 @@ class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.On
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
+
+            R.id.nav_location -> {
+                drawer_layout.closeDrawer(GravityCompat.START)
+                startLocation()
+                return true
+
+            }
+
             R.id.nav_help -> {
                 val intent = Intent(this@RouteScreenActivityWithNavigation, HelpActivity::class.java)
                 startActivity(intent)
@@ -220,9 +229,13 @@ class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.On
 
         mMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
+        startLocation()
+
+    }
+
+    private fun startLocation() {
         val intent = Intent(this@RouteScreenActivityWithNavigation, SelectVehicleActivity::class.java)
         startActivityForResult(intent, 1001)
-
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -253,11 +266,13 @@ class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.On
             if (null != marker) marker.remove()
             if (null != circle) circle.remove()
             val speed = locationResult.locations[0].speed
-            latLng = LatLng(locationResult.locations[0].latitude, locationResult.locations[0].longitude)
-            val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)
-            marker = mMap!!.addMarker(MarkerOptions().position(latLng).icon(icon))
-            val cameraPos = CameraPosition.Builder().tilt(60f).target(latLng).zoom(20f).build()
-            mMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPos), 1000, null)
+            if (speed > 0) {
+                latLng = LatLng(locationResult.locations[0].latitude, locationResult.locations[0].longitude)
+                val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)
+                marker = mMap!!.addMarker(MarkerOptions().position(latLng).icon(icon))
+                val cameraPos = CameraPosition.Builder().tilt(60f).target(latLng).zoom(20f).build()
+                mMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPos), 1000, null)
+            }
         }
     }
 
@@ -310,6 +325,9 @@ class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.On
     override fun onDustbinSuccess(result: JSONArray) {
         progressDialogUtil.hide()
         if (null != result) {
+
+            if (null != mMap) mMap!!.clear()
+
             var lst = ArrayList<Dustbin>()
             latLngPoints = ArrayList<LatLng>()
             points = ArrayList<Dustbin>()

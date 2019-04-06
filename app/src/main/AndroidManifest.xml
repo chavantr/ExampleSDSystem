@@ -27,7 +27,13 @@
                 android:configChanges="orientation|keyboardHidden|screenSize"
                 android:label="@string/title_activity_spalash"
                 android:screenOrientation="portrait"
-                android:theme="@style/FullscreenTheme">
+                android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
         </activity>
         <activity
                 android:name=".SelectVehicleActivity"
@@ -37,11 +43,11 @@
         <activity
                 android:name=".MainActivity"
                 android:screenOrientation="portrait">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+            <!-- <intent-filter>
+                 <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
+                 <category android:name="android.intent.category.LAUNCHER"/>
+             </intent-filter>-->
         </activity>
         <activity
                 android:name=".RouteScreenActivity"
@@ -54,6 +60,7 @@
         <meta-data
                 android:name="com.google.android.geo.API_KEY"
                 android:value="AIzaSyClCN7T0VPX7MIoOJEMA3W9JLXhV_S7yx4"/>
+
     </application>
 
 </manifest>
