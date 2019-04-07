@@ -41,6 +41,6 @@ class SplashActivity : AppCompatActivity(), OnSplashCompleteListener {
     }
 
     companion object {
-        const val HOW_RUN = 2000
+        const val HOW_RUN = 2000L
     }
 }
