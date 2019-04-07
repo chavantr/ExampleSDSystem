@@ -24,12 +24,12 @@ class SplashActivity : AppCompatActivity(), OnSplashCompleteListener {
         SplashWaitAsync().setOnFlashListener(this, 0)
 
         ObjectAnimator.ofFloat(lblSmartCity, "translationY", 70f).apply {
-            duration = 2000
+            duration = HOW_RUN
             start()
         }
 
         ObjectAnimator.ofFloat(lblCleanCity, "translationY", -70f).apply {
-            duration = 2000
+            duration = HOW_RUN
             start()
         }
     }
@@ -38,5 +38,9 @@ class SplashActivity : AppCompatActivity(), OnSplashCompleteListener {
         val intent = Intent(this@SplashActivity, MainActivity::class.java)
         startActivity(intent)
         finish()
+    }
+
+    companion object {
+        const val HOW_RUN = 2000
     }
 }
