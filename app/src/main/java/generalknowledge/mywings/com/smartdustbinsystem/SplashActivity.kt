@@ -23,12 +23,12 @@ class SplashActivity : AppCompatActivity(), OnSplashCompleteListener {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         SplashWaitAsync().setOnFlashListener(this, 0)
 
-        ObjectAnimator.ofFloat(lblSmartCity, "translationY", 70f).apply {
+        ObjectAnimator.ofFloat(lblSmartCity, "translationY", 90f).apply {
             duration = HOW_RUN
             start()
         }
 
-        ObjectAnimator.ofFloat(lblCleanCity, "translationY", -70f).apply {
+        ObjectAnimator.ofFloat(lblCleanCity, "translationY", -90f).apply {
             duration = HOW_RUN
             start()
         }

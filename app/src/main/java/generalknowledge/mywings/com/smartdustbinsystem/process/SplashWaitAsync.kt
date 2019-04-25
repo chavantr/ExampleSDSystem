@@ -7,7 +7,7 @@ class SplashWaitAsync : AsyncTask<Int, Void, Int>() {
     private lateinit var onSplashCompleteListener: OnSplashCompleteListener
 
     override fun doInBackground(vararg param: Int?): Int {
-        Thread.sleep(15 * 1000)
+        Thread.sleep(5 * 1000)
         return 0
     }
 
