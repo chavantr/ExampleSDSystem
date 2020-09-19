@@ -222,7 +222,7 @@ class RouteScreenActivityWithNavigation : AppCompatActivity(), NavigationView.On
                 .strokeWidth(2f)
         )
 
-        val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)
+        val icon = BitmapDescriptorFactory.fromResource(R.drawable.img_dustbin)
         marker = mMap!!.addMarker(MarkerOptions().position(latLng).icon(icon))
         val cameraPos = CameraPosition.Builder().tilt(60f).target(latLng).zoom(20f).build()
         mMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPos), 1000, null)
